@@ -35,10 +35,12 @@ $(document).ready(function () {
             },
            
             {
-                "data": "ProductoId",
+                "data": "productoId",
                 "className": "text-center",
                 "orderable": false,
                 "render": function (data, type, row, meta) {
+
+                    console.log(data)
                     return '<button class="btn btn-info btn-icon editar mar-rgt" title="Actualizar registro"  data-id="' + data + '"><i class="la la-pencil icon-lg"></i></button>'
                         + '<button class="btn btn-danger btn-icon eliminar" data-id="' + data + '" title ="Eliminar registro" ><i class="la la-trash icon-lg"></i></button>';
                 }
@@ -89,13 +91,68 @@ $(document).ready(function () {
     // 🔹 Evento click para Editar
     $('#TablaProducto').on('click', 'button.editar', function () {
         const id = $(this).data('id');
-        alert(id)
+        
         //// Llamada GET al controlador para traer el formulario con datos
-        //$.get(Componente.UrlControlador +  "Formulario", { id: id }, function (html) {
-        //    $('#form-producto').show().html(html);
-        //    $('#div-tabla-productos').hide();
-        //}).fail(function () {
-        //    swal("Error", "No se pudo cargar el formulario de edición", "error");
-        //});
+        $.get(Componente.UrlControlador +  "Formulario", { ProductoId: id }, function (html) {
+            $('#form-producto').show().html(html);
+            $('#div-tabla-productos').hide();
+        }).fail(function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo cargar el formulario de edición.'
+            })
+            //swal("Error", "No se pudo cargar el formulario de edición", "error");
+        });
+    });
+
+    $('#TablaProducto').on('click', 'button.eliminar', function () {
+        const id = $(this).data('id');
+
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "El producto será desactivado (eliminación lógica).",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                $.ajax({
+                    url: Componente.UrlControlador + "EliminarProducto",
+                    type: "POST",
+                    data: { id: id },
+                    success: function (response) {
+                        if (response.estado) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Eliminado',
+                                text: 'El producto ha sido eliminado correctamente.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            // 🔄 Recargar tabla
+                            tabla.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.errorMessage || 'No se pudo eliminar el producto.'
+                            });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Ocurrió un problema al intentar eliminar el producto.'
+                        });
+                    }
+                });
+            }
+        });
     });
 })
