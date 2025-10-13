@@ -2,7 +2,34 @@
     UrlControlador: "/Bodega/"
 };
 
+let productosSeleccionados = [];
+let ListaProductos = [];
 
+
+function ConsultarProductos() {
+    $.ajax({
+        url: '/Bodega/ObtenerListaProductos',
+        type: 'GET',
+        success: function (response) {
+            if (response.data) {
+                listaProductos = response.data;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.error || 'No se pudieron cargar los productos.'
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en la solicitud AJAX',
+                text: error
+            });
+        }
+    });
+};
 
 PoblarTablaBodegas();
 
@@ -24,20 +51,25 @@ function PoblarTablaBodegas() {
                 return;
             }
 
+
+
             table = $('#TablaBodegas').DataTable({
                 data: response.data,
                 columns: [
-                    { data: 'NombreBodega' },
+                    { data: 'nombreBodega' },
                     {
-                        data: 'BodegaId',
+                        data: 'bodegaId',
                         render: function (data, type, row) {
                             return `
-                                <div class="d-flex justify-content-between">
-                                    <div class="btn-group">
-                                        <button class="btn btn-primary editar-btn" data-idbodega="${row.bodegaid}">
+                                <div class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-info info-btn" data-idbodega="${row.bodegaId}" title="Información">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </button>
+                                        <button class="btn btn-primary editar-btn" data-idbodega="${row.bodegaId}" title="Editar">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
-                                        <button class="btn btn-danger eliminar-btn" data-idbodega="${row.bodegaid}">
+                                        <button class="btn btn-danger eliminar-btn" data-idbodega="${row.bodegaId}" title="Eliminar">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
                                     </div>
@@ -49,7 +81,6 @@ function PoblarTablaBodegas() {
                 order: [[0, 'asc']],
                 responsive: true,
 
-                // 💡 Distribución personalizada del header
                 dom:
                     "<'row mb-3'<'col-sm-6 d-flex align-items-center'B><'col-sm-6 d-flex justify-content-end'f>>" +
                     "rt" +
@@ -61,6 +92,7 @@ function PoblarTablaBodegas() {
                         className: 'btn btn-primary',
                         action: function () {
                             $('#DivAgregarBodega').show();
+                            ConsultarProductos();
                             $('#DivTablaBodegas').hide();
                         }
                     },
@@ -81,28 +113,100 @@ function PoblarTablaBodegas() {
 }
 
 $('#cancelButton').on('click', function () {
-    $('#DivAgregarBodega').hide();
-    $('#DivTablaBodegas').show();
-    $('#AgregarBodegaForm')[0].reset();
+    RetornarAIndex();
+    bloquearControles('desbloquear');
 });
 
+function RetornarAIndex() {
+    //  Ocultar y mostrar secciones
+    $('#DivAgregarBodega').hide();
+    $('#DivTablaBodegas').show();
+    const form = $('#AgregarBodegaForm')[0];
+    if (form) form.reset();
+
+    //  Vaciar tabla de productos (por si habían filas agregadas)
+    $('#TablaProductosBodega tbody').empty();
+
+    // Reiniciar selectpickers dentro del form
+    $('.selectpicker').selectpicker('deselectAll');
+    $('.selectpicker').selectpicker('refresh');
+
+    //  Limpiar listas globales
+    productosSeleccionados = [];
+    listaProductos = [];
+}
 
 
 
+function bloquearControles(modo) {
+    const disabled = modo === 'bloquear';
+    $('#btnAgregarFila').prop('disabled', disabled);
+    $('#GuardarDatosBodega').prop('disabled', disabled);
+    $('.btnEditarFila').prop('disabled', disabled);
+    $('.btnEliminarFila').prop('disabled', disabled);
+}
 
 
 
-// Al hacer clic en el botón "+"
 
 $('#btnAgregarFila').on('click', function () {
+    // Evitar agregar si hay fila en edición
+    const filaEditable = $('#TablaProductosBodega tbody tr').filter(function () {
+        return $(this).find('.btnGuardarFila').is(':visible');
+    });
+    if (filaEditable.length > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: 'Debe guardar la fila actual antes de agregar una nueva.'
+        });
+        return;
+    }
+
+    // Validar lista de productos
+    if (!listaProductos || listaProductos.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin productos',
+            text: 'No hay productos cargados.'
+        });
+        return;
+    }
+
+
+    productosSeleccionados = [];
+    $('#TablaProductosBodega tbody tr').each(function () {
+        const id = $(this).find('.productoTexto').data('id');
+        if (id) productosSeleccionados.push(parseInt(id));
+    });
+
+    // Construir opciones filtradas
+    let opciones = '<option value="">Seleccione un producto</option>';
+    listaProductos.forEach(p => {
+        if (!productosSeleccionados.includes(p.productoId)) {
+            opciones += `<option value="${p.productoId}">${p.nombre}</option>`;
+        }
+    });
+
+    if (opciones === '<option value="">Seleccione un producto</option>') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Productos agotados',
+            text: 'Ya ha agregado todos los productos disponibles.'
+        });
+        return;
+    }
+
+    // Crear la nueva fila
     const nuevaFila = `
         <tr>
-            <td><input type="text" class="form-control nombreProducto" placeholder="Ingrese nombre"></td>
             <td>
-                <div class="input-group">
-                    <span class="input-group-text">C$</span>
-                    <input type="number" class="form-control precioProducto" step="0.01" min="0" placeholder="0.00">
-                </div>
+                <select class="selectProducto form-select" name="productoId" data-live-search="true">
+                    ${opciones}
+                </select>
+            </td>
+            <td>
+                <input type="number" class="form-control cantidadProducto" min="1" step="1" placeholder="Cantidad">
             </td>
             <td class="text-center">
                 <button type="button" class="btn btn-success btn-sm btnGuardarFila" title="Guardar">
@@ -115,61 +219,94 @@ $('#btnAgregarFila').on('click', function () {
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </td>
-        </tr>
-    `;
+        </tr>`.trim();
 
-    $('#TablaProductosBodega tbody').append(nuevaFila);
+    const $tbody = $('#TablaProductosBodega tbody');
+    $tbody.append(nuevaFila);
+
+    // Inicializar solo el último select
+    const $ultimoSelect = $tbody.find('tr:last .selectProducto');
+    $ultimoSelect.selectpicker({
+        liveSearch: true,
+        width: '100%'
+    });
+
+    // Bloquear todos los demás controles mientras esta fila esté en edición
+    bloquearControles('bloquear');
 });
 
-
-// Guardar fila → convierte inputs a texto
 $(document).on('click', '.btnGuardarFila', function () {
     const fila = $(this).closest('tr');
-    const nombre = fila.find('.nombreProducto').val().trim();
-    const precio = fila.find('.precioProducto').val();
+    const $select = fila.find('.selectProducto');
+    const idProducto = $select.selectpicker('val') || $select.val();
+    const nombreProducto = $select.find('option:selected').text();
+    const cantidad = fila.find('.cantidadProducto').val();
 
-    if (nombre === '' || precio === '' || parseFloat(precio) < 0) {
+    if (!idProducto || cantidad === '' || parseFloat(cantidad) <= 0) {
         Swal.fire({
             icon: 'warning',
             title: 'Campos inválidos',
-            text: 'Debe ingresar un nombre y un precio válido.'
+            text: 'Debe seleccionar un producto y una cantidad válida.'
         });
         return;
     }
 
-    // Sustituir los inputs por texto
-    fila.find('td:eq(0)').html(`<span class="nombreTexto">${nombre}</span>`);
-    fila.find('td:eq(1)').html(`<span class="precioTexto">C$ ${parseFloat(precio).toFixed(2)}</span>`);
+    // Actualizar lista global
+    if (!productosSeleccionados.includes(parseInt(idProducto))) {
+        productosSeleccionados.push(parseInt(idProducto));
+    }
 
-    // Cambiar botones visibles
+    // Convertir inputs a texto
+    fila.find('td:eq(0)').html(`<span class="productoTexto" data-id="${idProducto}">${nombreProducto}</span>`);
+    fila.find('td:eq(1)').html(`<span class="cantidadTexto">${cantidad}</span>`);
+
     fila.find('.btnGuardarFila').hide();
     fila.find('.btnEditarFila').show();
+    bloquearControles('desbloquear');
 });
 
 
-// Editar fila → vuelve los textos a inputs
 $(document).on('click', '.btnEditarFila', function () {
     const fila = $(this).closest('tr');
-    const nombre = fila.find('.nombreTexto').text();
-    const precio = fila.find('.precioTexto').text().replace('C$ ', '');
+    const idProducto = parseInt(fila.find('.productoTexto').data('id'));
+    const cantidad = fila.find('.cantidadTexto').text();
 
-    fila.find('td:eq(0)').html(`<input type="text" class="form-control nombreProducto" value="${nombre}">`);
+
+    let opciones = '<option value="">Seleccione un producto</option>';
+    listaProductos.forEach(p => {
+        if (!productosSeleccionados.includes(p.productoId) || p.productoId === idProducto) {
+            const selected = (p.productoId === idProducto) ? ' selected' : '';
+            opciones += `<option value="${p.productoId}"${selected}>${p.nombre}</option>`;
+        }
+    });
+
+    fila.find('td:eq(0)').html(`
+        <select class="selectProducto" name="productoId" data-live-search="true" data-width="100%">
+            ${opciones}
+        </select>
+    `);
     fila.find('td:eq(1)').html(`
-        <div class="input-group">
-            <span class="input-group-text">C$</span>
-            <input type="number" class="form-control precioProducto" step="0.01" min="0" value="${precio}">
-        </div>
+        <input type="number" class="form-control cantidadProducto" min="1" step="1" value="${cantidad}">
     `);
 
-    // Cambiar botones visibles
+    const $select = fila.find('.selectProducto');
+    fila.find('.bootstrap-select').remove();
+    $select.selectpicker({ liveSearch: true, width: '100%' });
+
     fila.find('.btnEditarFila').hide();
     fila.find('.btnGuardarFila').show();
+
+
+    const index = productosSeleccionados.indexOf(idProducto);
+    if (index !== -1) productosSeleccionados.splice(index, 1);
 });
 
 
-// Eliminar fila
+
 $(document).on('click', '.btnEliminarFila', function () {
     const fila = $(this).closest('tr');
+    const id = parseInt(fila.find('.productoTexto').data('id'));
+
     Swal.fire({
         title: '¿Eliminar producto?',
         text: "Esta acción no se puede deshacer.",
@@ -177,10 +314,186 @@ $(document).on('click', '.btnEliminarFila', function () {
         showCancelButton: true,
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar'
-    }).then((result) => {
+    }).then(result => {
         if (result.isConfirmed) {
             fila.remove();
+
+
+            const index = productosSeleccionados.indexOf(id);
+            if (index !== -1) productosSeleccionados.splice(index, 1);
+
+
+            
+            bloquearControles('desbloquear');
+        }
+
+
+    });
+});
+
+
+$('#GuardarDatosBodega').on('click', function () {
+    // Validaciones iniciales
+    var NombreBodega = $('#NombreBodega').val();
+
+    if (!NombreBodega || NombreBodega.trim() === '') {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'El nombre de la bodega es obligatorio'
+        });
+        $('#NombreBodega').trigger('focus');
+        return;
+    }
+
+    // Verificar si hay filas en edición
+    const filasEnEdicion = $('#TablaProductosBodega tbody tr').filter(function () {
+        return $(this).find('.btnGuardarFila').is(':visible');
+    });
+
+    if (filasEnEdicion.length > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Fila sin guardar',
+            text: 'Tiene ' + filasEnEdicion.length + ' fila(s) en modo edición. Debe guardarlas antes de continuar.'
+        });
+        return;
+    }
+
+    // Recorrer tabla y construir lista de productos
+    var productos = [];
+    var productosIds = new Set(); // Para evitar duplicados
+
+    $('#TablaProductosBodega tbody tr').each(function () {
+        const $fila = $(this);
+        const $productoTexto = $fila.find('.productoTexto');
+        const $cantidadTexto = $fila.find('.cantidadTexto');
+
+        // Solo procesar filas guardadas
+        if ($productoTexto.length > 0 && $cantidadTexto.length > 0) {
+            const productoId = parseInt($productoTexto.data('id'));
+            const nombreProducto = $productoTexto.text().trim();
+            const cantidad = parseInt($cantidadTexto.text());
+
+            // Validar datos
+            if (!productoId || isNaN(cantidad) || cantidad <= 0) {
+                return; // Saltar fila inválida
+            }
+
+            // Evitar duplicados
+            if (productosIds.has(productoId)) {
+                console.warn('Producto duplicado encontrado:', productoId);
+                return;
+            }
+
+            productosIds.add(productoId);
+
+            // Crear objeto producto según el formato del VM
+            const productoVM = {
+                ProductoId: productoId,
+                Nombre: nombreProducto,
+                cantidad: cantidad,
+                Precio: 0, // Valor por defecto
+                EstadoFila: true,
+                FechaCreacion: null,
+                FechaModificacion: null
+            };
+
+            productos.push(productoVM);
+        }
+    });
+
+    // Construir objeto final
+    var datosEnvio = {
+        NombreBodega: NombreBodega.trim(),
+        Productos: productos
+    };
+
+
+    // Mostrar confirmación antes de enviar
+    Swal.fire({
+        title: '¿Confirmar guardado?',
+        html: `Va a crear la bodega <strong>"${NombreBodega.trim()}"</strong><br>
+               ${productos.length > 0
+                ? `con ${productos.length} producto(s)`
+                : 'sin productos asociados'}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            enviarDatosAlServidor(datosEnvio);
         }
     });
 });
 
+function enviarDatosAlServidor(datos) {
+    $.ajax({
+        url: Componente.UrlControlador + 'AgregarBodegaYProductos',
+        type: 'POST',
+        data: BodegaProductos = datos,
+        success: function (response) {
+            if (response.success) {
+                const mensaje = datos.Productos.length > 0
+                    ? 'La Bodega y Productos se agregaron exitosamente'
+                    : 'La Bodega se creó exitosamente';
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: mensaje,
+                    showConfirmButton: true,
+                }).then(function () {
+                    RetornarAIndex();
+                    PoblarTablaBodegas();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.error || 'Hubo un error al procesar la solicitud'
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            let errorMsg = 'Hubo un error al enviar el formulario';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+                errorMsg = xhr.responseJSON.error;
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: errorMsg
+            });
+        }
+    });
+}
+
+
+
+
+$('#TablaBodegas').on('click', '.editar-btn', function () {
+    const id = $(this).data('idbodega');
+
+    $.get(Componente.UrlControlador + "FormularioEditarYConsulta", { Bodega: id, Visualizar: 0 }, function (html) {
+        $('#DivEditarOInfo').show().html(html);
+        $('#DivTablaBodegas').hide();
+    }).fail(function () {
+        Swal.fire("Error", "No se pudo cargar el formulario de edición.", "error");
+    });
+});
+
+
+
+$('#TablaBodegas').on('click', '.info-btn', function () {
+    const id = $(this).data('idbodega');
+
+    $.get(Componente.UrlControlador + "FormularioEditarYConsulta", { Bodega: id, Visualizar: 1 }, function (html) {
+        $('#DivEditarOInfo').show().html(html);
+        $('#DivTablaBodegas').hide();
+    }).fail(function () {
+        Swal.fire("Error", "No se pudo cargar la vista de información.", "error");
+    });
+});

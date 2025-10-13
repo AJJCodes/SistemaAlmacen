@@ -17,11 +17,15 @@ namespace Modelo.Bodega
         public DateTime? FechaModificacion { get; set; }
     }
 
-    public class Bodega_Productos_VM
+    public class ProductosBodega_VM:Producto_VM
     {
-        public int BodegaId { get; set; }
-        public string NombreBodegaConProductos { get; set; } = null!;
+       public  int cantidad { get; set; }
 
-        public List<Producto_VM> Productos { get; set; } = new List<Producto_VM>();
+    }
+
+    public class Bodega_Productos_VM: Bodega_VM
+    {
+
+        public List<ProductosBodega_VM>? Productos { get; set; } = new List<ProductosBodega_VM>();
     }
 }

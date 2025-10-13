@@ -1,4 +1,4 @@
-﻿using Logica.Bodega;
+﻿using Logica.BodegaLogica;
 using Logica.ProductoLogica;
 using Microsoft.AspNetCore.Mvc;
 using Modelo.Producto;
