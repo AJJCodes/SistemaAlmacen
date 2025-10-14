@@ -23,16 +23,16 @@ namespace Web.Controllers.Producto
         [HttpPost]
         public IActionResult ObtenerlistaProductos()
         {
-            List<Producto_VM> ListaBodegas = new List<Producto_VM>();
+            List<Producto_VM> ListaProductos = new List<Producto_VM>();
             string? errorMessage = null;
 
 
-            bool exito = ln.ListaProducto(ref ListaBodegas, out errorMessage);
+            bool exito = ln.ListaProducto(ref ListaProductos, out errorMessage);
 
             if (exito)
             {
 
-                return Json(new { status = true, data = ListaBodegas });
+                return Json(new { status = true, data = ListaProductos });
             }
             else
             {
@@ -106,6 +106,13 @@ namespace Web.Controllers.Producto
             });
         }
 
+        public JsonResult EliminarProducto(int id)
+        {
+            string errorMessage = string.Empty;
+            bool estado = ln.Eliminar(id, ref errorMessage);
+
+            return Json(new { estado , errorMessage });
+        }
 
         #endregion 
     }
