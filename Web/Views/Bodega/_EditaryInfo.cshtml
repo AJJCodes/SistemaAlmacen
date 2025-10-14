@@ -23,13 +23,13 @@
             {
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="mb-0">Lista de productos</h5>
-                    <button id="btnAgregarFila" type="button" class="btn btn-success">
+                    <button id="btnAgregarFilaEditar" type="button" class="btn btn-success">
                         <i class="fa-solid fa-plus"></i> Agregar producto
                     </button>
                 </div>
             }
 
-            <table id="TablaProductosBodega" class="table table-striped table-hover table-bordered rounded-2 w-100">
+            <table id="TablaProductosBodegaEditar" class="table table-striped table-hover table-bordered rounded-2 w-100">
                 <thead class="bg-light">
                     <tr>
                         <th>Producto</th>
@@ -50,10 +50,10 @@
                                     <span class="cantidadTexto">@item.cantidad</span>
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-primary btn-sm btnEditarFila" title="Editar">
+                                    <button type="button" class="btn btn-primary btn-sm btnEditarFilaBodegaEditar" title="Editar">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
-                                    <button type="button" class="btn btn-danger btn-sm btnEliminarFila" title="Eliminar">
+                                    <button type="button" class="btn btn-danger btn-sm btnEliminarFilaBodegaEditar" title="Eliminar">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </td>

@@ -123,6 +123,37 @@ namespace Web.Controllers.Bodega
                 return Json(new { success = false, error = errorMessage });
             }
         }
+        [HttpPost]
+        public IActionResult EditarBodegaYProductos(Bodega_Productos_VM BodegaProductos)
+        {
+            string? errorMessage = null;
+            bool resultado = ln.EditarBodegaYProductos(BodegaProductos, out errorMessage);
+
+            if (resultado)
+            {
+                return Json(new { success = true });
+            }
+            else
+            {
+                return Json(new { success = false, error = errorMessage });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult EliminarBodega(int IdBodega)
+        {
+            string? errorMessage = null;
+            bool resultado = ln.EliminarBodegaYInventario(IdBodega, out errorMessage);
+
+            if (resultado)
+            {
+                return Json(new { success = true });
+            }
+            else
+            {
+                return Json(new { success = false, error = errorMessage });
+            }
+        }
         #endregion
     }
 }

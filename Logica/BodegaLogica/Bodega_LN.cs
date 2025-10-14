@@ -168,6 +168,142 @@ namespace Logica.BodegaLogica
                 }
             }
         }
+
+        public bool EditarBodegaYProductos(Bodega_Productos_VM Datos, out string? errorMessage)
+        {
+            using (var transaction = bd.Database.BeginTransaction())
+            {
+                try
+                {
+                    var bodegaExistente = bd.Bodega.FirstOrDefault(b => b.BodegaId == Datos.BodegaId && b.EstadoFila == true);
+                    if (bodegaExistente == null)
+                    {
+                        errorMessage = "La bodega no existe o fue eliminada.";
+                        return false;
+                    }
+
+                    bool nombreDuplicado = bd.Bodega.Any(b =>
+                        b.NombreBodega.ToLower() == Datos.NombreBodega.ToLower() &&
+                        b.BodegaId != Datos.BodegaId &&
+                        b.EstadoFila==true );
+
+                    if (nombreDuplicado)
+                    {
+                        errorMessage = $"El nombre '{Datos.NombreBodega}' ya está en uso por otra bodega.";
+                        return false;
+                    }
+
+                    bodegaExistente.NombreBodega = Datos.NombreBodega;
+                    bodegaExistente.FechaModificacion = DateTime.Now;
+                    bd.SaveChanges();
+
+
+                    var productosActuales = bd.Inventario
+                        .Where(i => i.BodegaId == Datos.BodegaId && i.EstadoFila == true)
+                        .ToList();
+
+                    var nuevosProductos = Datos.Productos ?? new List<ProductosBodega_VM>();
+
+
+                    var idsNuevos = nuevosProductos.Select(p => p.ProductoId).ToList();
+                    var aEliminar = productosActuales.Where(p => !idsNuevos.Contains(p.ProductoId)).ToList();
+
+                    foreach (var eliminar in aEliminar)
+                    {
+                        eliminar.EstadoFila = false;
+                        eliminar.FechaModificacion = DateTime.Now;
+                    }
+
+
+                    foreach (var nuevo in nuevosProductos)
+                    {
+                        var existente = productosActuales.FirstOrDefault(p => p.ProductoId == nuevo.ProductoId);
+
+                        if (existente == null)
+                        {
+                            if (nuevo.ProductoId.HasValue) 
+                            {
+                                var nuevoInventario = new Inventario
+                                {
+                                    ProductoId = nuevo.ProductoId.Value,
+                                    BodegaId = Datos.BodegaId,
+                                    Cantidad = nuevo.cantidad,
+                                    EstadoFila = true,
+                                    FechaCreacion = DateTime.Now
+                                };
+                                bd.Inventario.Add(nuevoInventario);
+                            }
+                        }
+                        else
+                        {
+
+                            if (existente.Cantidad != nuevo.cantidad)
+                            {
+                                existente.Cantidad = nuevo.cantidad;
+                                existente.FechaModificacion = DateTime.Now;
+                            }
+                        }
+                    }
+
+                    bd.SaveChanges();
+                    transaction.Commit();
+
+                    errorMessage = null;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    errorMessage = "Error al editar la bodega: " + ex.Message;
+                    return false;
+                }
+            }
+        }
+
+
+        public bool EliminarBodegaYInventario(int IdBodega, out string? MensajeError)
+        {
+            using (var transaction = bd.Database.BeginTransaction())
+            {
+                try
+                {
+
+                    var bodega = bd.Bodega.FirstOrDefault(b => b.BodegaId == IdBodega && b.EstadoFila==true);
+                    if (bodega == null)
+                    {
+                        MensajeError = "La bodega no existe o ya fue eliminada.";
+                        return false;
+                    }
+
+
+                    var inventarios = bd.Inventario
+                        .Where(i => i.BodegaId == IdBodega && i.EstadoFila== true)
+                        .ToList();
+
+                    foreach (var inv in inventarios)
+                    {
+                        inv.EstadoFila = false;
+                        inv.FechaModificacion = DateTime.Now;
+                    }
+
+                    bodega.EstadoFila = false;
+                    bodega.FechaModificacion = DateTime.Now;
+
+                    bd.SaveChanges();
+                    transaction.Commit();
+
+                    MensajeError = null;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    MensajeError = "Error al eliminar la bodega: " + ex.Message;
+                    return false;
+                }
+            }
+        }
+
         #endregion
     }
 }

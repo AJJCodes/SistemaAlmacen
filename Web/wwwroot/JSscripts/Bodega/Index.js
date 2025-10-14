@@ -497,3 +497,52 @@ $('#TablaBodegas').on('click', '.info-btn', function () {
         Swal.fire("Error", "No se pudo cargar la vista de información.", "error");
     });
 });
+
+
+$('#TablaBodegas').on('click', '.eliminar-btn', function () {
+    const idBodega = $(this).data('idbodega');
+
+    Swal.fire({
+        title: '¿Eliminar bodega?',
+        text: "Esta acción eliminará la bodega y su inventario asociado.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: Componente.UrlControlador + 'EliminarBodega',
+                type: 'POST',
+                data: { IdBodega: idBodega },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminada',
+                            text: 'La bodega fue eliminada correctamente.'
+                        });
+
+                        PoblarTablaBodegas();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'No se pudo eliminar la bodega.'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo procesar la solicitud: ' + error
+                    });
+                }
+            });
+        }
+    });
+});
+
