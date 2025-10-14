@@ -257,7 +257,7 @@ $('#EditarDatosBodega').on('click', function () {
             title: 'Campo requerido',
             text: 'El nombre de la bodega es obligatorio'
         });
-        $('#NombreBodega').trigger('focus');
+        $('#EditarOVisualizarBodegaForm').find('#NombreBodega').trigger('focus');
         return;
     }
 
