@@ -1,0 +1,33 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div id="DivTablaTraslados" class="card p-5 rounded">
+    <table id="TablaTraslados" class="table table-striped table-hover table-bordered w-100">
+        <thead class="bg-light">
+            <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Bodega Origen</th>
+                <th>Bodega Destino</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<div id="form-traslado">
+
+</div>
+
+
+@section Scripts {
+    <script src="~/JSscripts/Traslado/Index.js"></script>
+}
