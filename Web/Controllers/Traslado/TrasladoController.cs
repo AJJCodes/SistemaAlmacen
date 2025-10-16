@@ -1,5 +1,8 @@
-﻿using Logica.TrasladoLogica;
+﻿using Logica.BodegaLogica;
+using Logica.TrasladoLogica;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Modelo.Bodega;
 using Modelo.Producto;
 using Modelo.Traslado;
 
@@ -8,13 +11,24 @@ namespace Web.Controllers.Traslado
     public class TrasladoController : Controller
     {
         private readonly Traslado_LN ln;
-        
+        private readonly Bodega_LN ln2;
         public TrasladoController()
         {
             ln = new Traslado_LN();
+            ln2 = new Bodega_LN();
         }
         public IActionResult Index()
         {
+            string? ErrorMsg = null;
+            List<Bodega_VM> ListaBodegas = new List<Bodega_VM>();
+            if (ln2.ProporcionarListaBodegas(ref ListaBodegas, out ErrorMsg))
+            {
+                ViewBag.ListaBodegas = ListaBodegas;
+            }
+            else
+            {
+                ViewBag.ListaBodegas = ListaBodegas;
+            }
             return View();
         }
 
@@ -37,17 +51,36 @@ namespace Web.Controllers.Traslado
 
         public ActionResult Formulario(int? TrasladoId)
         {
-            //if (TrasladoId == null)
-                return PartialView("_CrearEditar");
 
-
-            //string? errorMessage = null;
-            //var producto = ln.ObtenerPorId(TrasladoId, ref errorMessage);
-
-            //if (producto == null)
-            //    return Json(new { error = errorMessage });
-
-            //return PartialView("_CrearEditar", producto);
+            return PartialView("_CrearEditar");
         }
+
+        #region Consultas
+        [HttpGet]
+        public IActionResult ObtenerProductosPorBodega(int idBodega)
+        {
+            List<Bodega_Productos_VM> Lista = new List<Bodega_Productos_VM>();
+            string? errorMessage;
+
+            bool resultado = ln.ProporcionarListaBodegasYProductos(ref Lista, idBodega, out errorMessage);
+
+            if (!resultado) 
+            {
+                return Json(new { success = false, error = errorMessage ?? "Error desconocido" });
+            }
+
+
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    productos = Lista.FirstOrDefault()?.Productos
+                }
+            });
+        }
+
+
+        #endregion
     }
 }
