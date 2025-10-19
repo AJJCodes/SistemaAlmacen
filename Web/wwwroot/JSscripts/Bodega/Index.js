@@ -112,10 +112,15 @@ function PoblarTablaBodegas() {
     });
 }
 
-$('#cancelButton').on('click', function () {
+
+$('#DivAgregarBodega').on('click', '#cancelButton', function () {
     RetornarAIndex();
     bloquearControles('desbloquear');
-});
+})
+//$('#cancelButton').on('click', function () {
+//    RetornarAIndex();
+//    bloquearControles('desbloquear');
+//});
 
 function RetornarAIndex() {
     //  Ocultar y mostrar secciones

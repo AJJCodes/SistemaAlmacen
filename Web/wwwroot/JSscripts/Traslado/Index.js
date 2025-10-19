@@ -404,6 +404,8 @@ $('#TrasladarEntreBodegas').on('click', function () {
                             $('#TablaProductosBodega tbody').empty();
                             $('#BodegaId').val('').selectpicker('refresh');
                             $('#Bodega2Id').val('').selectpicker('refresh');
+
+                            recargarTablaTraslados();
                         });
                     } else {
                         Swal.fire({
@@ -426,5 +428,38 @@ $('#TrasladarEntreBodegas').on('click', function () {
     });
 });
 
+$('#cancelButton').on('click', function () {
+    LimpiarYRegresar();
+});
 
 
+
+function LimpiarYRegresar() {
+    // Ocultar formulario y mostrar tabla principal
+    $('#form-trasladoNuevo').hide();
+    $('#DivTablaTraslados').show();
+
+    // Limpiar selects y tablas del formulario
+    $('#BodegaId').val('').selectpicker('refresh');
+    $('#Bodega2Id').val('').selectpicker('refresh');
+    $('#ProdcutosBodega1').empty().selectpicker('destroy').selectpicker({
+        liveSearch: true,
+        width: '100%',
+        title: 'Seleccione un producto'
+    });
+
+    // Limpiar la tabla de productos agregados
+    $('#TablaProductosBodega tbody').empty();
+
+    // Reiniciar variables globales
+    productosDisponibles = [];
+    bodegasDisponibles = [];
+    actualizarEstadoBoton();
+}
+
+
+function recargarTablaTraslados() {
+    if (tablaTraslados) {
+        tablaTraslados.ajax.reload(null, false); // false = no cambia la página actual del DataTable
+    }
+}

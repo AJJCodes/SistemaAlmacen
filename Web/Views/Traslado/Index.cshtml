@@ -15,16 +15,16 @@
 </div>
 
 
-<div id="form-trasladoNuevo" style="display:none">
+<div id="form-trasladoNuevo" style="display:none" class="card">
     <form id="TrasladoBodegaForm">
-        <div class="panel-body mb-4">
+        <div class="card-body mb-4">
             <p class="text-start my-3 fw-bold fs-4">Datos Traslados</p>
 
             <div class="row">
 
-                <div class="col-md-5 contenedorBodegaTraslado">
-                    <div id="DivSelectpickerTraslado" style="margin-bottom: 30px">
-                        <label for="BodegaId" class="form-label">Bodega 1</label>
+                <div class="col-md-6 contenedorBodegaTraslado">
+                    <div id="DivSelectpickerTraslado" >
+                        <label for="BodegaId" class="form-label">Bodega Origen</label>
 
                         <select id="BodegaId" name="BodegaId"
                                 class="selectpicker"
@@ -42,49 +42,10 @@
                     </div>
 
 
-                    <div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <select id="ProdcutosBodega1" name="ProdcutosBodega1"
-                                        class="selectpicker"
-                                        data-live-search="true"
-                                        data-width="100%"
-                                        title="Seleccione un producto">
-                                </select>
-                            </div>
-
-                            <div class="col-md-6" style="padding-left:135px">
-                                <div class="d-flex justify-content-between align-items-end mb-2">
-                                    <button id="btnAgregarFila" type="button" class="btn btn-success">
-                                        <i class="fa-solid fa-plus"></i> Agregar producto
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <table id="TablaProductosBodega" class="table-responsive table align-middle mb-0 bg-white w-100 table table-striped table-hover table-bordered rounded-2">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Cantidad</th>
-                                    <th>Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-
-                    </div>
-
                 </div>
-
-                <div class="col-md-1 d-flex justify-content-center align-items-center">
-                    <i class="fa-solid fa-right-left fa-2x text-primary"></i>
-                </div>
-
                 <div class="col-md-6 contenedorBodegaTraslado">
-                    <div id="DivSelectpickerTrasladoBodega2" style="margin-bottom: 30px">
-                        <label for="Bodega2Id" class="form-label">Bodega 2</label>
+                    <div id="DivSelectpickerTrasladoBodega2" >
+                        <label for="Bodega2Id" class="form-label">Bodega Destino</label>
 
                         <select id="Bodega2Id" name="Bodega2Id"
                                 class="selectpicker"
@@ -102,8 +63,52 @@
                     </div>
                 </div>
 
+               
+
+                @*  <div class="col-md-1 d-flex justify-content-center align-items-center">
+                    <i class="fa-solid fa-right-left fa-2x text-primary"></i>
+                </div> *@
+
+
+
+            </div>
+            <br />
+            <br/>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <select id="ProdcutosBodega1" name="ProdcutosBodega1"
+                            class="selectpicker"
+                            data-live-search="true"
+                            data-width="100%"
+                            title="Seleccione un producto">
+                    </select>
+                </div>
+
+                <div class="col-md-6" style="padding-left:135px">
+                    <div class="d-flex justify-content-between align-items-end mb-2">
+                        <button id="btnAgregarFila" type="button" class="btn btn-success" title="Agregar Producto">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
 
+            <div class="row mt-2">
+
+                <div class="col-md-12">
+                    <table id="TablaProductosBodega" class="table-responsive table align-middle mb-0 bg-white w-100 table table-striped table-hover table-bordered rounded-2">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                </div>
+            </div>
         </div>
 
         <div style="text-align: right; background-color: #D3CECE;" class="p-2 pt-2">

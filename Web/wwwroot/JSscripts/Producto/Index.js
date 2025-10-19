@@ -27,16 +27,19 @@ $(document).ready(function () {
         "columns": [
             {
                 "data": "nombre",
-                className: 'text-center'
+                className: 'text-center',
+                title: 'Nombre'
             },
             {
                 "data": "precio",
-                className: 'text-center'
+                className: 'text-center',
+                title: 'Precio'
             },
            
             {
                 "data": "productoId",
                 "className": "text-center",
+                title: 'Opciones',
                 "orderable": false,
                 "render": function (data, type, row, meta) {
 
