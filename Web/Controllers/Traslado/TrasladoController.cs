@@ -82,5 +82,23 @@ namespace Web.Controllers.Traslado
 
 
         #endregion
+
+        #region CRUD
+        [HttpPost]
+        public IActionResult RegistrarTraslado([FromBody] List<Traslado_VM> traslados)
+        {
+            if (traslados == null || traslados.Count == 0)
+                return Json(new { success = false, error = "No se recibieron productos para trasladar." });
+
+            string? errorMessage;
+            bool resultado = ln.RegistrarTraslado(traslados, out errorMessage);
+
+            if (resultado)
+                return Json(new { success = true });
+            else
+                return Json(new { success = false, error = errorMessage ?? "Error desconocido al registrar el traslado." });
+        }
+
+        #endregion
     }
 }

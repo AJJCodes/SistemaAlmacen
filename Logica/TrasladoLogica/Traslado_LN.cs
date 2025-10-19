@@ -1,4 +1,5 @@
 ﻿using Datos.BaseDatos;
+using Microsoft.EntityFrameworkCore;
 using Modelo.Bodega;
 using Modelo.Traslado;
 using System;
@@ -117,6 +118,92 @@ namespace Logica.TrasladoLogica
 
         #endregion
 
+        #region CRUD
+        public bool RegistrarTraslado(List<Traslado_VM> traslados, out string? errorMessage)
+        {
+            using (var transaction = bd.Database.BeginTransaction())
+            {
+                try
+                {
+                    foreach (var t in traslados)
+                    {
+                        // 🔹 Validación básica
+                        if (t.Cantidad <= 0)
+                        {
+                            errorMessage = $"Cantidad inválida para el producto {t.NombreProducto}";
+                            transaction.Rollback();
+                            return false;
+                        }
+
+                        // 🔹 Buscar inventario de la bodega origen
+                        var inventarioOrigen = bd.Inventario
+                            .FirstOrDefault(i => i.BodegaId == t.BodegaOrigenID && i.ProductoId == t.ProductoID && i.EstadoFila == true);
+
+                        if (inventarioOrigen == null || inventarioOrigen.Cantidad < t.Cantidad)
+                        {
+                            errorMessage = $"Stock insuficiente en la bodega {t.NombreBodegaOrigen} para el producto {t.NombreProducto}.";
+                            transaction.Rollback();
+                            return false;
+                        }
+                        // Restar del inventario origen
+                        inventarioOrigen.Cantidad -= t.Cantidad;
+                        inventarioOrigen.FechaModificacion = DateTime.Now;
+                        bd.Entry(inventarioOrigen).State = EntityState.Modified;
+
+
+                        // Buscar inventario de la bodega destino
+                        var inventarioDestino = bd.Inventario
+                            .FirstOrDefault(i => i.BodegaId == t.BodegaDestinoID && i.ProductoId == t.ProductoID && i.EstadoFila == true);
+
+                        if (inventarioDestino != null)
+                        {
+                            // Ya existe el producto → sumar cantidad
+                            inventarioDestino.Cantidad += t.Cantidad;
+                            inventarioDestino.FechaModificacion = DateTime.Now;
+                            bd.Entry(inventarioDestino).State = EntityState.Modified;
+                        }
+                        else
+                        {
+                            // No existe → crear nuevo registro
+                            var nuevoInventario = new Inventario
+                            {
+                                ProductoId = t.ProductoID,
+                                BodegaId = t.BodegaDestinoID,
+                                Cantidad = t.Cantidad,
+                                EstadoFila = true,
+                                FechaCreacion = DateTime.Now
+                            };
+                            bd.Inventario.Add(nuevoInventario);
+                        }
+
+                        // Registrar traslado en tabla "Traslados"
+                        var nuevoTraslado = new Traslado
+                        {
+                            ProductoId = t.ProductoID,
+                            Cantidad = t.Cantidad,
+                            BodegaOrigenId = t.BodegaOrigenID,
+                            BodegaDestinoId = t.BodegaDestinoID,
+                            Fecha = DateTime.Now,
+                        };
+                        bd.Traslado.Add(nuevoTraslado);
+                    }
+
+                    bd.SaveChanges();
+                    transaction.Commit();
+
+                    errorMessage = null;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    errorMessage = ex.Message;
+                    return false;
+                }
+            }
+        }
+
+        #endregion
 
 
 

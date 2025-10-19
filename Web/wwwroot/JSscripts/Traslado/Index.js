@@ -26,7 +26,6 @@ function inicializarTabla() {
             url: Componente.UrlControlador + 'ObtenerListaTraslados',
             type: 'GET',
             data: function (d) {
-                // merge DataTables params con filtros (window.TrasladosFilters puede estar vacío)
                 return $.extend({}, d, window.TrasladosFilters);
             },
             dataSrc: function (json) {
@@ -89,16 +88,61 @@ const $tablaBody = $('#TablaProductosBodega tbody');
 const $btnAgregar = $('#btnAgregarFila'); // botón agregar fila
 
 
-// 🧠 Función auxiliar para habilitar/deshabilitar botón
+//  Función auxiliar para habilitar/deshabilitar botón
 function actualizarEstadoBoton() {
     const tieneOpciones = $selectProductos.find('option').length > 1;
     $btnAgregar.prop('disabled', !tieneOpciones);
 }
 
 
-// 🏭 Cargar productos de una bodega
+
+
+let bodegasDisponibles = [];
+
+
+//Se obtienen las bodegas disponibles en el 1
+$('#BodegaId option').each(function () {
+    const id = $(this).val();
+    const nombre = $(this).text();
+
+    if (id) { 
+        bodegasDisponibles.push({
+            id: parseInt(id),
+            nombre: nombre.trim()
+        });
+    }
+});
+
+
+function PoblarSelectpickerBodega2(IdBodegaSeleccionada) {
+    const $select2 = $('#Bodega2Id');
+
+    // Destruir el selectpicker actual (por si ya tenía opciones)
+    $select2.selectpicker('destroy');
+    $select2.empty();
+
+    // Filtrar bodegas excluyendo la seleccionada
+    const bodegasFiltradas = bodegasDisponibles.filter(b => b.id != IdBodegaSeleccionada);
+
+    // Construir las nuevas opciones
+    let opciones = '<option value="">Seleccione una bodega</option>';
+    bodegasFiltradas.forEach(b => {
+        opciones += `<option value="${b.id}">${b.nombre}</option>`;
+    });
+
+    // Insertar y volver a inicializar el selectpicker
+    $select2.html(opciones).selectpicker({
+        liveSearch: true,
+        width: '100%'
+    });
+}
+
+
 $('#BodegaId').on('changed.bs.select', function () {
     const idBodega = $(this).val();
+
+    PoblarSelectpickerBodega2(idBodega);
+
 
     $selectProductos.selectpicker('destroy');
     $selectProductos.empty();
@@ -153,7 +197,7 @@ $('#BodegaId').on('changed.bs.select', function () {
 });
 
 
-// ➕ Agregar producto a la tabla
+//  Agregar producto a la tabla
 $btnAgregar.on('click', function () {
     const idProducto = $selectProductos.val();
     const nombreProducto = $selectProductos.find('option:selected').text();
@@ -205,7 +249,7 @@ $btnAgregar.on('click', function () {
 });
 
 
-// ✏️ Editar cantidad del producto
+//  Editar cantidad del producto
 $(document).on('click', '.editar-fila', function () {
     const fila = $(this).closest('tr');
     const idProducto = fila.data('id');
@@ -250,7 +294,7 @@ $(document).on('click', '.editar-fila', function () {
 });
 
 
-// 🗑️ Eliminar fila → devolver producto al selectpicker
+//  Eliminar fila → devolver producto al selectpicker
 $(document).on('click', '.eliminar-fila', function () {
     const fila = $(this).closest('tr');
     const idProducto = fila.data('id');
@@ -272,3 +316,115 @@ $(document).on('click', '.eliminar-fila', function () {
 
     actualizarEstadoBoton();
 });
+
+
+
+$('#TrasladarEntreBodegas').on('click', function () {
+    const idBodegaOrigen = $('#BodegaId').val();
+    const idBodegaDestino = $('#Bodega2Id').val();
+    const nombreBodegaOrigen = $('#BodegaId option:selected').text();
+    const nombreBodegaDestino = $('#Bodega2Id option:selected').text();
+
+    // Validaciones básicas
+    if (!idBodegaOrigen || !idBodegaDestino) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Seleccione ambas bodegas',
+            text: 'Debe seleccionar una bodega de origen y una de destino.'
+        });
+        return;
+    }
+
+    if (idBodegaOrigen === idBodegaDestino) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Bodegas repetidas',
+            text: 'No puede realizar un traslado a la misma bodega.'
+        });
+        return;
+    }
+
+    // Recorrer la tabla de productos
+    const traslados = [];
+    $('#TablaProductosBodega tbody tr').each(function () {
+        const $fila = $(this);
+        const productoId = $fila.data('id');
+        const nombreProducto = $fila.find('td:eq(0)').text();
+        const cantidad = parseInt($fila.find('td:eq(1)').text());
+
+        if (productoId && cantidad > 0) {
+            traslados.push({
+                ProductoID: productoId,
+                NombreProducto: nombreProducto,
+                Cantidad: cantidad,
+                BodegaOrigenID: idBodegaOrigen,
+                BodegaDestinoID: idBodegaDestino,
+                NombreBodegaOrigen: nombreBodegaOrigen,
+                NombreBodegaDestino: nombreBodegaDestino,
+                FechaTraslado: new Date().toISOString()
+            });
+        }
+    });
+
+    if (traslados.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin productos',
+            text: 'Debe agregar al menos un producto para trasladar.'
+        });
+        return;
+    }
+
+    // Confirmación antes de enviar
+    Swal.fire({
+        title: '¿Confirmar traslado?',
+        html: `Trasladará <strong>${traslados.length}</strong> producto(s)
+               de <b>${nombreBodegaOrigen}</b> a <b>${nombreBodegaDestino}</b>.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, trasladar',
+        cancelButtonText: 'Cancelar'
+    }).then(result => {
+        if (result.isConfirmed) {
+            // Enviar al controlador
+            $.ajax({
+                url: Componente.UrlControlador + 'RegistrarTraslado',
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(traslados),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Traslado realizado',
+                            text: 'Los productos fueron trasladados exitosamente.'
+                        }).then(() => {
+                            $('#form-trasladoNuevo').hide();
+                            $('#DivTablaTraslados').show();
+                            $('#TablaProductosBodega tbody').empty();
+                            $('#BodegaId').val('').selectpicker('refresh');
+                            $('#Bodega2Id').val('').selectpicker('refresh');
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'No se pudo registrar el traslado.'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error en la solicitud',
+                        text: 'No se pudo conectar con el servidor.'
+                    });
+                    console.error(error);
+                }
+            });
+        }
+    });
+});
+
+
+
