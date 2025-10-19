@@ -9,10 +9,97 @@ let tablaTraslados;
 inicializarTabla();
 
 
+$('#cancelButtonTrasladarEntreBodegas').on('click', function () {
+    LimpiarYRetornarTraslado();
+});
+
+function CargarBodegas() {
+    $.ajax({
+        url: Componente.UrlControlador + 'ObtenerBodegas',
+        type: 'GET',
+        success: function (response) {
+            if (response.success && response.data && response.data.length > 0) {
+
+                bodegasDisponibles = response.data.map(b => ({
+                    id: b.bodegaId,
+                    nombre: b.nombreBodega
+                }));
+
+                let opciones = '<option value="">Seleccione una bodega</option>';
+                bodegasDisponibles.forEach(b => {
+                    opciones += `<option value="${b.id}">${b.nombre}</option>`;
+                });
+
+                // reconstruimos ambos selects
+                $('#BodegaId').selectpicker('destroy').html(opciones).selectpicker({
+                    liveSearch: true,
+                    width: '100%'
+                });
+
+                $('#Bodega2Id').selectpicker('destroy').html(opciones).selectpicker({
+                    liveSearch: true,
+                    width: '100%'
+                });
+
+                $('#BodegaId').off('changed.bs.select').on('changed.bs.select', function () {
+                    const idBodega = $(this).val();
+                    PoblarSelectpickerBodega2(idBodega);
+                    cargarProductosPorBodega(idBodega);
+                });
+
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Sin bodegas',
+                    text: response.error || 'No se encontraron bodegas disponibles.'
+                });
+            }
+        },
+        error: function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron cargar las bodegas.'
+            });
+        }
+    });
+}
+
+
+
+
+function LimpiarYRetornarTraslado() {
+    // Ocultar el formulario y mostrar la tabla principal
+    $('#form-trasladoNuevo').hide();
+    $('#DivTablaTraslados').show();
+
+    // Limpiar tabla y selects
+    $('#TablaProductosBodega tbody').empty();
+
+    //$('#BodegaId').val('').selectpicker('refresh');
+    //$('#Bodega2Id').val('').selectpicker('refresh');
+    $('#BodegaId').empty();
+    $('#Bodega2Id').empty();
+    $('#ProdcutosBodega1').empty().selectpicker('refresh');
+
+    // Resetear variables globales
+    productosDisponibles = [];
+    bodegasDisponibles = [];
+
+    // Recargar la tabla principal de traslados
+    if (tablaTraslados) {
+        tablaTraslados.ajax.reload(null, false); // false = no cambiar de página
+    }
+}
+
+
+
+
 
 function MostrarDivNuevo() {
     $('#form-trasladoNuevo').show();
     $('#DivTablaTraslados').hide();
+    CargarBodegas();
 }
 
 function inicializarTabla() {
@@ -100,37 +187,20 @@ function actualizarEstadoBoton() {
 let bodegasDisponibles = [];
 
 
-//Se obtienen las bodegas disponibles en el 1
-$('#BodegaId option').each(function () {
-    const id = $(this).val();
-    const nombre = $(this).text();
-
-    if (id) { 
-        bodegasDisponibles.push({
-            id: parseInt(id),
-            nombre: nombre.trim()
-        });
-    }
-});
-
 
 function PoblarSelectpickerBodega2(IdBodegaSeleccionada) {
     const $select2 = $('#Bodega2Id');
 
-    // Destruir el selectpicker actual (por si ya tenía opciones)
     $select2.selectpicker('destroy');
     $select2.empty();
 
-    // Filtrar bodegas excluyendo la seleccionada
     const bodegasFiltradas = bodegasDisponibles.filter(b => b.id != IdBodegaSeleccionada);
 
-    // Construir las nuevas opciones
     let opciones = '<option value="">Seleccione una bodega</option>';
     bodegasFiltradas.forEach(b => {
         opciones += `<option value="${b.id}">${b.nombre}</option>`;
     });
 
-    // Insertar y volver a inicializar el selectpicker
     $select2.html(opciones).selectpicker({
         liveSearch: true,
         width: '100%'
@@ -138,12 +208,9 @@ function PoblarSelectpickerBodega2(IdBodegaSeleccionada) {
 }
 
 
-$('#BodegaId').on('changed.bs.select', function () {
-    const idBodega = $(this).val();
-
-    PoblarSelectpickerBodega2(idBodega);
 
 
+function cargarProductosPorBodega(idBodega) {
     $selectProductos.selectpicker('destroy');
     $selectProductos.empty();
     $tablaBody.empty();
@@ -160,7 +227,7 @@ $('#BodegaId').on('changed.bs.select', function () {
             if (response.success && response.data && response.data.productos && response.data.productos.length > 0) {
                 productosDisponibles = response.data.productos;
 
-                let opciones ;
+                let opciones = '';
                 productosDisponibles.forEach(p => {
                     opciones += `<option value="${p.productoId}">${p.nombre} (Stock: ${p.cantidad})</option>`;
                 });
@@ -194,7 +261,8 @@ $('#BodegaId').on('changed.bs.select', function () {
             });
         }
     });
-});
+}
+
 
 
 //  Agregar producto a la tabla
@@ -399,11 +467,7 @@ $('#TrasladarEntreBodegas').on('click', function () {
                             title: 'Traslado realizado',
                             text: 'Los productos fueron trasladados exitosamente.'
                         }).then(() => {
-                            $('#form-trasladoNuevo').hide();
-                            $('#DivTablaTraslados').show();
-                            $('#TablaProductosBodega tbody').empty();
-                            $('#BodegaId').val('').selectpicker('refresh');
-                            $('#Bodega2Id').val('').selectpicker('refresh');
+                            LimpiarYRetornarTraslado();
                         });
                     } else {
                         Swal.fire({
