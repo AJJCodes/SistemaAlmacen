@@ -24,7 +24,6 @@ var Editar_bodegaApp = function (options) {
     var ListaProductoseditar = [];
     var productosSeleccionados = []
     this.init = function () {
-        console.log('Iniciando')
         // 1️⃣ Configurar variables globales
         window.Componente = { UrlControlador: "/Bodega/" };
         
@@ -129,13 +128,6 @@ var Editar_bodegaApp = function (options) {
             const idProducto = $select.selectpicker('val') || $select.val();
             const nombreProducto = $select.find('option:selected').text();
             const cantidad = fila.find('.cantidadProducto').val();
-            console.log('Entre')
-            console.log(
-          
-                idProducto,
-                nombreProducto,
-                cantidad
-            )
 
             if (!idProducto || cantidad === '' || parseFloat(cantidad) <= 0) {
                 Swal.fire({

@@ -50,6 +50,9 @@
                                     <span class="cantidadTexto">@item.cantidad</span>
                                 </td>
                                 <td class="text-center">
+                                    <button type="button" class="btn btn-success btn-sm btnGuardarFilaEditar" title="Guardar" style="display:none">
+                                        <i class="fa-solid fa-floppy-disk"></i>
+                                    </button>
                                     <button type="button" class="btn btn-primary btn-sm btnEditarFilaBodegaEditar" title="Editar">
                                         <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
@@ -66,16 +69,17 @@
 
         <div style="text-align: right; background-color: #D3CECE;" class="p-2 pt-2">
 
+            <button id="cancelButtonEditar" type="button" class="btn btn-danger">
+                <i class="fa-solid fa-rotate-left"></i> Cancelar
+            </button>
+
+
             @if (ViewBag.Visualizar != 1)
             {
                 <button type="button" id="EditarDatosBodega" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk"></i> Editar
                 </button>
             }
-
-            <button id="cancelButtonEditar" type="button" class="btn btn-danger">
-                <i class="fa-solid fa-rotate-left"></i> Cancelar
-            </button>
         </div>
 
 
