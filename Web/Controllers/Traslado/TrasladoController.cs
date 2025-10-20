@@ -57,6 +57,23 @@ namespace Web.Controllers.Traslado
 
         #region Consultas
         [HttpGet]
+        public IActionResult ObtenerBodegas()
+        {
+            string? errorMessage;
+            List<Bodega_VM> listaBodegas = new List<Bodega_VM>();
+
+            bool resultado = ln2.ProporcionarListaBodegas(ref listaBodegas, out errorMessage);
+
+            if (resultado && listaBodegas != null)
+            {
+                return Json(new { success = true, data = listaBodegas });
+            }
+
+            return Json(new { success = false, error = errorMessage ?? "No se pudieron obtener las bodegas." });
+        }
+
+        
+        [HttpGet]
         public IActionResult ObtenerProductosPorBodega(int idBodega)
         {
             List<Bodega_Productos_VM> Lista = new List<Bodega_Productos_VM>();
