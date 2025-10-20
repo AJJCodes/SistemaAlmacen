@@ -9,6 +9,9 @@ function RetornarAIndexDesdeEditar() {
     // Ocultar y limpiar completamente el div de edición
     $('#DivEditarOInfo').hide().empty();
 
+    productosSeleccionadoseditar = [];
+    ListaProductoseditar = [];
+
     // Mostrar nuevamente la tabla principal
     $('#DivTablaBodegas').show();
 }
@@ -18,9 +21,6 @@ window.Componente = {
 };
 
 ConsultarProductosEditar();
-
-let productosSeleccionadoseditar = [];
-let ListaProductoseditar = [];
 
 
 function ConsultarProductosEditar() {
@@ -88,16 +88,16 @@ $('#btnAgregarFilaEditar').on('click', function () {
     }
 
 
-    productosSeleccionados = [];
+    productosSeleccionadoseditar = [];
     $('#TablaProductosBodegaEditar tbody tr').each(function () {
         const id = $(this).find('.productoTexto').data('id');
-        if (id) productosSeleccionados.push(parseInt(id));
+        if (id) productosSeleccionadoseditar.push(parseInt(id));
     });
 
     // Construir opciones filtradas
     let opciones = '<option value="">Seleccione un producto</option>';
     ListaProductoseditar.forEach(p => {
-        if (!productosSeleccionados.includes(p.productoId)) {
+        if (!productosSeleccionadoseditar.includes(p.productoId)) {
             opciones += `<option value="${p.productoId}">${p.nombre}</option>`;
         }
     });
@@ -149,12 +149,13 @@ $('#btnAgregarFilaEditar').on('click', function () {
     bloquearControlesEditar('bloquear');
 });
 
-$(document).on('click', '.btnGuardarFilaEditar', function () {
+$('#DivEditarOInfo').on('click', '.btnGuardarFilaEditar', function () {
     const fila = $(this).closest('tr');
     const $select = fila.find('.selectProducto');
     const idProducto = $select.selectpicker('val') || $select.val();
     const nombreProducto = $select.find('option:selected').text();
     const cantidad = fila.find('.cantidadProducto').val();
+    console.log("Click");
 
     if (!idProducto || cantidad === '' || parseFloat(cantidad) <= 0) {
         Swal.fire({
@@ -166,8 +167,8 @@ $(document).on('click', '.btnGuardarFilaEditar', function () {
     }
 
     // Actualizar lista global
-    if (!productosSeleccionados.includes(parseInt(idProducto))) {
-        productosSeleccionados.push(parseInt(idProducto));
+    if (!productosSeleccionadoseditar.includes(parseInt(idProducto))) {
+        productosSeleccionadoseditar.push(parseInt(idProducto));
     }
 
     // Convertir inputs a texto
@@ -180,7 +181,7 @@ $(document).on('click', '.btnGuardarFilaEditar', function () {
 });
 
 
-$(document).on('click', '.btnEditarFilaBodegaEditar', function () {
+$('#DivEditarOInfo').on('click', '.btnEditarFilaBodegaEditar', function () {
     const fila = $(this).closest('tr');
     const idProducto = parseInt(fila.find('.productoTexto').data('id'));
     const cantidad = fila.find('.cantidadTexto').text();
@@ -188,7 +189,7 @@ $(document).on('click', '.btnEditarFilaBodegaEditar', function () {
 
     let opciones = '<option value="">Seleccione un producto</option>';
     ListaProductoseditar.forEach(p => {
-        if (!productosSeleccionados.includes(p.productoId) || p.productoId === idProducto) {
+        if (!productosSeleccionadoseditar.includes(p.productoId) || p.productoId === idProducto) {
             const selected = (p.productoId === idProducto) ? ' selected' : '';
             opciones += `<option value="${p.productoId}"${selected}>${p.nombre}</option>`;
         }
@@ -211,13 +212,13 @@ $(document).on('click', '.btnEditarFilaBodegaEditar', function () {
     fila.find('.btnGuardarFilaEditar').show();
 
 
-    const index = productosSeleccionados.indexOf(idProducto);
-    if (index !== -1) productosSeleccionados.splice(index, 1);
+    const index = productosSeleccionadoseditar.indexOf(idProducto);
+    if (index !== -1) productosSeleccionadoseditar.splice(index, 1);
 });
 
 
 
-$(document).on('click', '.btnEliminarFilaBodegaEditar', function () {
+$('#DivEditarOInfo').on('click', '.btnEliminarFilaBodegaEditar', function () {
     const fila = $(this).closest('tr');
     const id = parseInt(fila.find('.productoTexto').data('id'));
 
@@ -233,8 +234,8 @@ $(document).on('click', '.btnEliminarFilaBodegaEditar', function () {
             fila.remove();
 
 
-            const index = productosSeleccionados.indexOf(id);
-            if (index !== -1) productosSeleccionados.splice(index, 1);
+            const index = productosSeleccionadoseditar.indexOf(id);
+            if (index !== -1) productosSeleccionadoseditar.splice(index, 1);
 
 
 

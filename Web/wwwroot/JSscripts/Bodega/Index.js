@@ -4,7 +4,8 @@
 
 let productosSeleccionados = [];
 let ListaProductos = [];
-
+let productosSeleccionadoseditar = [];
+let ListaProductoseditar = [];
 
 function ConsultarProductos() {
     $.ajax({
