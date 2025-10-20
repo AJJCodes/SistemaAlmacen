@@ -84,12 +84,13 @@
 
 <script type="text/javascript" src="~/JSscripts/Bodega/EditarBodega.js"></script>
 
-@* <script>
-    $(function () {
-        var bodegaEditar = new Editar_bodegaApp();
-        bodegaEditar.init();
+<script>
+    $(document).ready(function () {
+        const app = new Editar_bodegaApp();
+        app.init(); // 🔥 Aquí se ejecutará todo lo de dentro de init()
     });
-</script> *@
+</script>
+
 @if (ViewBag.Visualizar == 1)
 {
     <script>

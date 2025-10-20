@@ -185,7 +185,7 @@ namespace Logica.BodegaLogica
                     bool nombreDuplicado = bd.Bodega.Any(b =>
                         b.NombreBodega.ToLower() == Datos.NombreBodega.ToLower() &&
                         b.BodegaId != Datos.BodegaId &&
-                        b.EstadoFila==true );
+                        b.EstadoFila == true);
 
                     if (nombreDuplicado)
                     {
@@ -193,39 +193,66 @@ namespace Logica.BodegaLogica
                         return false;
                     }
 
+                    // Actualizar datos básicos de la bodega
                     bodegaExistente.NombreBodega = Datos.NombreBodega;
                     bodegaExistente.FechaModificacion = DateTime.Now;
                     bd.SaveChanges();
 
-
+                    // Productos actuales activos
                     var productosActuales = bd.Inventario
                         .Where(i => i.BodegaId == Datos.BodegaId && i.EstadoFila == true)
                         .ToList();
 
                     var nuevosProductos = Datos.Productos ?? new List<ProductosBodega_VM>();
-
-
                     var idsNuevos = nuevosProductos.Select(p => p.ProductoId).ToList();
-                    var aEliminar = productosActuales.Where(p => !idsNuevos.Contains(p.ProductoId)).ToList();
 
+                    // Desactivar los productos eliminados
+                    var aEliminar = productosActuales.Where(p => !idsNuevos.Contains(p.ProductoId)).ToList();
                     foreach (var eliminar in aEliminar)
                     {
                         eliminar.EstadoFila = false;
                         eliminar.FechaModificacion = DateTime.Now;
                     }
 
-
+                    // Agregar / Actualizar / Reactivar productos
                     foreach (var nuevo in nuevosProductos)
                     {
-                        var existente = productosActuales.FirstOrDefault(p => p.ProductoId == nuevo.ProductoId);
+                        if (!nuevo.ProductoId.HasValue) continue;
+                        int idProd = nuevo.ProductoId.Value;
 
-                        if (existente == null)
+                        // Buscar activo
+                        var existenteActivo = productosActuales.FirstOrDefault(p => p.ProductoId == idProd);
+
+                        if (existenteActivo != null)
                         {
-                            if (nuevo.ProductoId.HasValue) 
+                            // Ya existe activo → solo actualizar cantidad si cambió
+                            if (existenteActivo.Cantidad != nuevo.cantidad)
                             {
+                                existenteActivo.Cantidad = nuevo.cantidad;
+                                existenteActivo.FechaModificacion = DateTime.Now;
+                            }
+                        }
+                        else
+                        {
+                            // Buscar si existe inactivo
+                            var existenteInactivo = bd.Inventario
+                                .FirstOrDefault(p => p.ProductoId == idProd &&
+                                                     p.BodegaId == Datos.BodegaId &&
+                                                     p.EstadoFila == false);
+
+                            if (existenteInactivo != null)
+                            {
+                                // Reactivar producto
+                                existenteInactivo.EstadoFila = true;
+                                existenteInactivo.Cantidad = nuevo.cantidad;
+                                existenteInactivo.FechaModificacion = DateTime.Now;
+                            }
+                            else
+                            {
+                                // Crear nuevo registro
                                 var nuevoInventario = new Inventario
                                 {
-                                    ProductoId = nuevo.ProductoId.Value,
+                                    ProductoId = idProd,
                                     BodegaId = Datos.BodegaId,
                                     Cantidad = nuevo.cantidad,
                                     EstadoFila = true,
@@ -234,20 +261,10 @@ namespace Logica.BodegaLogica
                                 bd.Inventario.Add(nuevoInventario);
                             }
                         }
-                        else
-                        {
-
-                            if (existente.Cantidad != nuevo.cantidad)
-                            {
-                                existente.Cantidad = nuevo.cantidad;
-                                existente.FechaModificacion = DateTime.Now;
-                            }
-                        }
                     }
 
                     bd.SaveChanges();
                     transaction.Commit();
-
                     errorMessage = null;
                     return true;
                 }
