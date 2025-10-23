@@ -1,7 +1,46 @@
-﻿@{
+﻿
+@{
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Bienvenido</h1>
+@section Styles {
+    <link rel="stylesheet" href="~/css/site-home.css" />
+}
+<div class="container">
+    <header class="header">
+        <div class="logo-container">
+            <img src="~/images/logo-ucn.png" alt="Logo UCN" class="logo">
+        </div>
+        <h1 class="university-title">UNIVERSIDAD CENTRAL DE NICARAGUA</h1>
+    </header>
+
+    <main class="content">
+        <section class="project-info">
+            <h2 class="project-title">Sistema Básico de Almacén </h2>
+            <p class="student-name">Rudy Winston Galo Garcia</p>
+            <p class="year" id="year"></p>
+        </section>
+
+        <section class="featured-section">
+            <div class="spongebob-container">
+                <img src="./images/spongebob.png" alt="Bob Esponja" class="spongebob">
+            </div>
+            <div class="featured-text">
+                <h3 class="featured-title">Compramos Cosas de Dudosa Procedencia</h3>
+                <p class="featured-subtitle">"Sin varo, pero cotizando cursos diplomados y la especialidad" - Bob Esponja Empresario</p>
+            </div>
+        </section>
+
+        <div class="decorative-line">
+            <div class="line line-primary"></div>
+            <div class="line line-secondary"></div>
+            <div class="line line-accent"></div>
+        </div>
+    </main>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+}

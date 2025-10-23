@@ -24,19 +24,32 @@ namespace Logica.ProductoLogica
         #region crud
         public bool ListaProducto(ref List<Producto_VM> ListaProductos, out string? errorMessage)
         {
+
+            
             try
             {
-                ListaProductos = (from prod in _bd.Producto
-                                  where prod.EstadoFila == true
-                                  select new Producto_VM
-                                  {
-                                      ProductoId = prod.ProductoId,
-                                      Nombre = prod.Nombre,
-                                      Precio = prod.Precio,
-                                      EstadoFila = prod.EstadoFila,
-                                      FechaCreacion = prod.FechaCreacion
-                                  }
-                                 ).ToList();
+
+                ListaProductos = _bd.Producto.FromSqlRaw("EXEC SP_Producto_Listar").AsEnumerable().Select(prod => new Producto_VM
+                {
+                    ProductoId = prod.ProductoId,
+                    Nombre = prod.Nombre,
+                    Precio = prod.Precio,
+                    EstadoFila = prod.EstadoFila,
+                    FechaCreacion = prod.FechaCreacion
+                }).ToList();
+                //.FromSqlRaw("EXEC ObtenerProductosPorCategoria @CategoriaId = {0}", categoriaId)
+                //.ToListAsync();
+                //ListaProductos = (from prod in _bd.Producto
+                //                  where prod.EstadoFila == true
+                //                  select new Producto_VM
+                //                  {
+                //                      ProductoId = prod.ProductoId,
+                //                      Nombre = prod.Nombre,
+                //                      Precio = prod.Precio,
+                //                      EstadoFila = prod.EstadoFila,
+                //                      FechaCreacion = prod.FechaCreacion
+                //                  }
+                //                 ).ToList();
                 errorMessage = null;
                 return true;
             }
@@ -57,15 +70,22 @@ namespace Logica.ProductoLogica
                 //{
 
                 //}
-                _bd.Producto.Add(new Producto()
-                {
-                    Nombre = producto.Nombre,
-                    Precio = producto.Precio,
-                    EstadoFila = true,
-                    FechaCreacion = DateTime.Now
-                });
+                //_bd.Producto.Add(new Producto()
+                //{
+                //    Nombre = producto.Nombre,
+                //    Precio = producto.Precio,
+                //    EstadoFila = true,
+                //    FechaCreacion = DateTime.Now
+                //});
 
-                _bd.SaveChanges();
+                //_bd.SaveChanges();
+
+                // Ejecutamos el SP directamente desde el contexto
+                _bd.Database.ExecuteSqlRaw(
+                    "EXEC SP_Producto_Insertar @Nombre = {0}, @Precio = {1}",
+                    producto.Nombre,
+                    producto.Precio
+                );
                 return true;
             }
             catch (Exception ex)
