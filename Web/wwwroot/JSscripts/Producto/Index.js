@@ -14,7 +14,7 @@ $(document).ready(function () {
             "url": Componente.UrlControlador + 'ObtenerlistaProductos',
             "type": 'post',
             "dataSrc": function (json) {
-                console.log(json)
+              
                 if (json.status) {
                     return json.data;
                 } else {
@@ -43,7 +43,7 @@ $(document).ready(function () {
                 "orderable": false,
                 "render": function (data, type, row, meta) {
 
-                    console.log(data)
+                
                     return '<button class="btn btn-info btn-icon editar mar-rgt" title="Actualizar registro"  data-id="' + data + '"><i class="la la-pencil icon-lg"></i></button>'
                         + '<button class="btn btn-danger btn-icon eliminar" data-id="' + data + '" title ="Eliminar registro" ><i class="la la-trash icon-lg"></i></button>';
                 }

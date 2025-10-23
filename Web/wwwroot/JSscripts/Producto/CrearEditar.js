@@ -116,5 +116,6 @@
     const regresar = () => {
         $('#div-tabla-productos').show();
         $('#form-producto').hide();
+        $('#form-producto').html('');
     }
 })

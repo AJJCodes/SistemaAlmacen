@@ -135,15 +135,16 @@ function inicializarTabla() {
                     const d = new Date(data);
                     return d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
                 }
-            },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function (row) {
-                    return `<button class="btn btn-sm btn-info btn-ver" data-id="${row.trasladoID || 0}"><i class="fa-solid fa-eye"></i></button>`;
-                }
             }
+            //{
+            //    data: null,
+
+            //    orderable: false,
+            //    searchable: false,
+            //    render: function (row) {
+            //        return `<button class="btn btn-sm btn-info btn-ver" data-id="${row.trasladoID || 0}"><i class="fa-solid fa-eye"></i></button>`;
+            //    }
+            //}
         ],
         order: [[4, 'desc']],
         responsive: true,
@@ -483,7 +484,7 @@ $('#TrasladarEntreBodegas').on('click', function () {
                         title: 'Error en la solicitud',
                         text: 'No se pudo conectar con el servidor.'
                     });
-                    console.error(error);
+                    
                 }
             });
         }
